@@ -1,5 +1,6 @@
 package com.alibou.security.auth;
 
+import com.alibou.security.user.User;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -39,5 +40,23 @@ public class AuthenticationController {
     service.refreshToken(request, response);
   }
 
+  @PostMapping("/userLogin")
+  public ResponseEntity<AuthenticationResponse> userLogin(
+          @RequestBody AuthenticationRequest request
+  ) {
+    return ResponseEntity.ok(service.userLogin(request));
+  }
+
+  @PostMapping("/userLoginOut")
+  public ResponseEntity<AuthenticationResponse> userLoginOut(
+          @RequestBody AuthenticationRequest request
+  ) {
+    return ResponseEntity.ok(service.userLoginOut(request));
+  }
+
+  @PostMapping("/Token")
+  public ResponseEntity<AuthenticationResponse> userLoginOut() {
+    return ResponseEntity.ok(service.token());
+  }
 
 }

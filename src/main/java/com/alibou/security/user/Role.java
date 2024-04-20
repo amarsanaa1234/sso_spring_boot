@@ -41,6 +41,11 @@ public enum Role {
                   MANAGER_DELETE,
                   MANAGER_CREATE
           )
+  ),
+  STUDENT(
+          Set.of(
+                  MANAGER_READ
+          )
   )
 
   ;

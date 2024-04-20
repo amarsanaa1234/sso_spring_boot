@@ -4,7 +4,7 @@ import com.alibou.security.config.JwtService;
 import com.alibou.security.token.Token;
 import com.alibou.security.token.TokenRepository;
 import com.alibou.security.token.TokenType;
-import com.alibou.security.user.Role;
+import com.alibou.security.tools.Tools;
 import com.alibou.security.user.User;
 import com.alibou.security.user.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,12 +12,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -90,10 +88,7 @@ public class AuthenticationService {
     tokenRepository.saveAll(validUserTokens);
   }
 
-  public void refreshToken(
-          HttpServletRequest request,
-          HttpServletResponse response
-  ) throws IOException {
+  public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws IOException {
     final String authHeader = request.getHeader(HttpHeaders.AUTHORIZATION);
     final String refreshToken;
     final String userEmail;
@@ -116,5 +111,47 @@ public class AuthenticationService {
         new ObjectMapper().writeValue(response.getOutputStream(), authResponse);
       }
     }
+  }
+
+  public AuthenticationResponse userLogin(AuthenticationRequest request) {
+    authenticationManager.authenticate(
+            new UsernamePasswordAuthenticationToken(
+                    request.getEmail(),
+                    request.getPassword()
+            )
+    );
+    var user = repository.findByEmail(request.getEmail())
+            .orElseThrow();
+    if(Tools.isNullOrEmpty(user.getActive_flag()) || Tools.compareValue(user.getActive_flag(), 0)){
+      user.setActive_flag(1);
+    }
+    var jwtToken = jwtService.generateToken(user);
+    var refreshToken = jwtService.generateRefreshToken(user);
+    revokeAllUserTokens(user);
+    saveUserToken(user, jwtToken);
+    repository.save(user);
+    return AuthenticationResponse.builder()
+            .accessToken(jwtToken)
+            .refreshToken(refreshToken)
+            .build();
+  }
+
+  public AuthenticationResponse userLoginOut(AuthenticationRequest request) {
+    var user = repository.findByEmail(request.getEmail())
+            .orElseThrow();
+
+    if(Tools.compareValue(user.getActive_flag(), 1)){
+      user.setActive_flag(0);
+    }
+    revokeAllUserTokens(user);
+    repository.save(user);
+    return AuthenticationResponse.builder()
+            .build();
+  }
+
+  public AuthenticationResponse token() {
+
+
+    return null;
   }
 }
