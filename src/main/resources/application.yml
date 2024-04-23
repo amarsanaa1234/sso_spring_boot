@@ -1,20 +1,43 @@
+server:
+  port: 8081
+
+logging:
+  level:
+    root: INFO
+    com.demosso.authorizationserver: DEBUG
+    org.springframework.jdbc: DEBUG
+    org.springframework.security: trace
+
 spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            provider: google
+            client-id: ${GOOGLE_CLIENT_ID}
+            client-secret: ${GOOGLE_CLIENT_SECRET}
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/auth
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+
   datasource:
     url: jdbc:mysql://localhost:3306/sso
     username: root
     password: 1234Aa123
-  jpa:
-    hibernate:
-      ddl-auto: create-drop
-    show-sql: false
-    properties:
-      hibernate:
-        format_sql: true
 
-application:
-  security:
-    jwt:
-      secret-key: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
-      expiration: 86400000 # a day
-      refresh-token:
-        expiration: 604800000 # 7 days
+    hikari:
+      connection-test-query: "SELECT 1"
+      connectionTimeout: 30000
+      validation-timeout: 30000
+      maximum-pool-size: 10
+      initialization-fail-timeout: 1
+      leak-detection-threshold: 0
+      auto: none
+
+  flyway:
+    url: jdbc:mysql://localhost:3306/sso
+    user: root
+    password: 1234Aa123
